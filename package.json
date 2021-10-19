@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node test/index.js",
-    "start": "node index.js",
+    "start": "nodemon index.js",
     "seed-db": "npx sequelize-cli db:seed:all",
     "migrate-db": "npx sequelize-cli db:migrate"
   },
@@ -22,7 +22,10 @@
   "dependencies": {
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
     "mysql2": "^2.3.0",
+    "nodemon": "^2.0.14",
     "sequelize": "^6.7.0"
   },
   "devDependencies": {

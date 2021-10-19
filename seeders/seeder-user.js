@@ -1,17 +1,24 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.bulkInsert(
-      'Accounts',
+      "Accounts",
       [
         {
-          username: 'bloomingseed',
-          password_hash: '',
-          date_created: new Date()
+          username: "bloomingseed",
+          password_hash: "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=",
+          date_created: new Date(),
         },
-      ], {})
+        {
+          username: "nvcgooner",
+          password_hash: "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=",
+          date_created: new Date(),
+        },
+      ],
+      {}
+    );
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete('People', null, {})
-  }
-}
+    return queryInterface.bulkDelete("Accounts", null, {});
+  },
+};

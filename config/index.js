@@ -12,7 +12,12 @@ if (!("error" in result)) {
   _.each(process.env, (value, key) => (envs[key] = value));
 }
 const env = process.env.NODE_ENV || "development";
-const sequelizeConfig = require("./config.json")[env];
+var sequelizeConfig = {};
+try{
+  sequelizeConfig = require("./config.json")[env];
+} catch(e){
+  sequelizeConfig = JSON.parse(process.env.sequelizeConfig);
+}
 envs = { ...envs, env, sequelizeConfig };
 
 console.log("env:", envs);

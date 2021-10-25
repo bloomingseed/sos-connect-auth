@@ -3,6 +3,7 @@ var express = require("express");
 var db = require("../models");
 var crypto = require("crypto");
 var jwt = require("jsonwebtoken");
+var { getAuthToken, authUserMiddleware } = require("../helpers");
 var EXPIRES_IN = config.EXPIRES_IN || "10m";
 var tokensRouter = express.Router();
 
@@ -69,25 +70,7 @@ async function loginHandler(req, res) {
   let { status, payload } = await authenticate(username, password);
   res.status(status).json(payload);
 }
-function getAuthToken(req) {
-  let authHeader = req.get("Authorization");
-  return authHeader && authHeader.split(" ")[1];
-}
-function authUserMiddleware(req, res, next) {
-  let accessToken = getAuthToken(req);
-  if (accessToken == null) {
-    return res.status(401).json({
-      error:
-        'Request header "Authentication" does not exist or does not contain authentication token.',
-    });
-  }
-  try {
-    jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET);
-  } catch (err) {
-    return res.status(401).json({ error: "Access token is invalid" });
-  }
-  next();
-}
+
 async function logoutHandler(req, res) {
   let accessToken = getAuthToken(req);
   let username = jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET).username;

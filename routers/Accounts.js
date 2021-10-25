@@ -26,8 +26,8 @@ async function registerHandler(req, res) {
     const ERR_CODE = { production: 23505, development: 1062 };
     const ENV_TYPE = config.NODE_ENV || config.env;
     if (
-      (ENV_TYPE === "production" && ERR_CODE[ENV_TYPE] === e.code) ||
-      (ENV_TYPE === "development" && ERR_CODE[ENV_TYPE] === e.errno)
+      (ENV_TYPE === "production" && ERR_CODE[ENV_TYPE] == e.code) ||
+      (ENV_TYPE === "development" && ERR_CODE[ENV_TYPE] == e.errno)
     ) {
       return res
         .status(400)

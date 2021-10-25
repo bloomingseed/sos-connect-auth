@@ -1,6 +1,10 @@
 var express = require("express");
 var db = require("../models");
 var crypto = require("crypto");
+var config = require("../config");
+var { getAuthToken, authUserMiddleware } = require("../helpers");
+var jwt = require("jsonwebtoken");
+
 var accountsRouter = express.Router();
 
 function hash(pwd) {
@@ -19,8 +23,12 @@ async function registerHandler(req, res) {
     res.sendStatus(200);
   } catch (e) {
     e = e.parent;
-    const USERNAME_EXISTS_ERR_CODE = "ER_DUP_ENTRY";
-    if (e.code === USERNAME_EXISTS_ERR_CODE) {
+    const ERR_CODE = { production: 23505, development: 1062 };
+    const ENV_TYPE = config.NODE_ENV || config.env;
+    if (
+      (ENV_TYPE === "production" && ERR_CODE[ENV_TYPE] === e.code) ||
+      (ENV_TYPE === "development" && ERR_CODE[ENV_TYPE] === e.errno)
+    ) {
       return res
         .status(400)
         .json({ error: `Username ${username} has already existed` });
@@ -28,8 +36,17 @@ async function registerHandler(req, res) {
     return res.status(500).json({ error: e });
   }
 }
+async function getInfoHandler(req, res) {
+  let { username } = await jwt.verify(
+    getAuthToken(req),
+    config.ACCESS_TOKEN_SECRET
+  );
+  let user = await db.Accounts.findByPk(username);
+  res.status(200).json({ username, date_created: user.date_created });
+}
 
 // register, insert {username, password_hash} to db: POST /accounts
 accountsRouter.route("/").post(registerHandler);
+accountsRouter.route("/:username").get(authUserMiddleware, getInfoHandler);
 
 module.exports = { router: accountsRouter, name: "accounts" };

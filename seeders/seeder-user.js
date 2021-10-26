@@ -4,7 +4,7 @@ module.exports = {
     for (let i = 0; i < 20; ++i) {
       seedings.push({
         username: `seeding.user.${i + 1}`,
-        password_hash: "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=",
+        password_hash: "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=",
         date_created: new Date(),
       });
     }
@@ -14,12 +14,12 @@ module.exports = {
       [
         {
           username: "bloomingseed",
-          password_hash: "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=",
+          password_hash: "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=",
           date_created: new Date(),
         },
         {
           username: "nvcgooner",
-          password_hash: "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=",
+          password_hash: "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=",
           date_created: new Date(),
         },
       ],

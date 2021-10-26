@@ -1,5 +1,14 @@
 module.exports = {
-  up: (queryInterface, Sequelize) => {
+  up: async (queryInterface, Sequelize) => {
+    let seedings = [];
+    for (let i = 0; i < 20; ++i) {
+      seedings.push({
+        username: `seeding.user.${i + 1}`,
+        password_hash: "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=",
+        date_created: new Date(),
+      });
+    }
+    await queryInterface.bulkInsert("Accounts", seedings, {});
     return queryInterface.bulkInsert(
       "Accounts",
       [

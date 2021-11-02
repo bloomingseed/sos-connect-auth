@@ -1,9 +1,8 @@
 var express = require("express");
 var db = require("../models");
 var crypto = require("crypto");
-var config = require("../config");
-var { getAuthToken, authUserMiddleware } = require("../helpers");
-var jwt = require("jsonwebtoken");
+var { authUserMiddleware } = require("../helpers");
+const DUP_KEY_ERRCODE = "23505";
 
 var accountsRouter = express.Router();
 
@@ -11,38 +10,73 @@ function hash(pwd) {
   return crypto.createHash("sha256").update(pwd).digest("base64");
 }
 
-async function registerHandler(req, res) {
-  let { username, password } = req.body;
-  let passwordHash = hash(password);
+async function getUser(username, res) {
+  let user = await db.Accounts.findByPk(username);
+  if (user == null) {
+    return res
+      .status(400)
+      .json({ error: `Username ${username} does not exist` });
+  }
+  return user;
+}
+
+async function registerCreationHandler(req, res) {
+  let user = req.user;
   try {
-    await db.Accounts.create({
-      username,
-      password_hash: passwordHash,
-      date_created: new Date(),
-    });
+    await user.save();
     res.sendStatus(200);
   } catch (e) {
     e = e.parent;
-    const ERR_CODE = { production: 23505, development: 1062 };
-    const ENV_TYPE = config.NODE_ENV || config.env;
-    if (
-      (ENV_TYPE === "production" && ERR_CODE[ENV_TYPE] == e.code) ||
-      (ENV_TYPE === "development" && ERR_CODE[ENV_TYPE] == e.errno)
-    ) {
+    if (e.code == DUP_KEY_ERRCODE) {
       return res
         .status(400)
-        .json({ error: `Username ${username} has already existed` });
+        .json({ error: `Username ${user.username} has already existed` });
     }
     return res.status(500).json({ error: e });
   }
 }
+async function registerAdminHandler(req, res) {
+  let username = req.verifyResult.username;
+  let sender = await getUser(username);
+  if (sender == null) {
+    return res.status(400).json({ error: `Username ${username} not found` });
+  }
+  if (sender.is_admin == false) {
+    return res
+      .status(401)
+      .json({ error: `Only admins can register admin accounts` });
+  }
+  let user = new db.Accounts({
+    username: req.body.username,
+    password_hash: hash(req.body.password),
+    date_created: new Date(),
+  });
+  req.user = user;
+  return await registerCreationHandler(req, res);
+}
+
+async function registerHandler(req, res) {
+  let { username, password, is_admin } = req.body;
+  if (is_admin === true) {
+    authUserMiddleware(req, res, () => {});
+    return await registerAdminHandler(req, res);
+  }
+  let user = new db.Accounts({
+    username,
+    password_hash: hash(password),
+    date_created: new Date(),
+  });
+  req.user = user;
+  registerCreationHandler(req, res);
+}
 async function getInfoHandler(req, res) {
-  let { username } = await jwt.verify(
-    getAuthToken(req),
-    config.ACCESS_TOKEN_SECRET
-  );
+  let username = req.verifyResult.username;
   let user = await db.Accounts.findByPk(username);
-  res.status(200).json({ username, date_created: user.date_created });
+  res.status(200).json({
+    username,
+    date_created: user.date_created,
+    is_admin: user.is_admin,
+  });
 }
 
 // register, insert {username, password_hash} to db: POST /accounts

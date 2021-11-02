@@ -15,11 +15,13 @@ module.exports = {
         {
           username: "bloomingseed",
           password_hash: "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=",
+          is_admin:true,
           date_created: new Date(),
         },
         {
           username: "nvcgooner",
           password_hash: "jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=",
+          is_admin:true,
           date_created: new Date(),
         },
       ],

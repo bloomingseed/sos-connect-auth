@@ -14,7 +14,7 @@ function authUserMiddleware(req, res, next) {
     });
   }
   try {
-    jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET);
+    req.verifyResult = jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET);
   } catch (err) {
     return res.status(401).json({ error: "Access token is invalid" });
   }

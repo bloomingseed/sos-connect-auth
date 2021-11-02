@@ -7,6 +7,11 @@ const createModel = (sequelize, DataTypes) => {
     password_hash: {
       type: DataTypes.STRING
     },
+    is_admin:{
+      allowNull: false,
+      defaultValue: false,
+      type: DataTypes.BOOLEAN
+    },
     date_created: DataTypes.DATE,
   }, {
     timestamps:true,

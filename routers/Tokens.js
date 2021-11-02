@@ -45,7 +45,7 @@ async function authenticate(username, password) {
     };
   }
   let payload = {
-    accessToken: signToken({ username }),
+    accessToken: signToken({ username, is_admin: user.is_admin }),
   };
   let loggedInUser = await getLoggedInUser(username);
   if (loggedInUser == null) {

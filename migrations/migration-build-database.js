@@ -11,6 +11,11 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
+      is_admin:{
+        allowNull: false,
+        defaultValue: false,
+        type: Sequelize.BOOLEAN
+      },
       date_created: {
         allowNull: false,
         type: Sequelize.DATE
@@ -33,6 +38,7 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('Tokens');
     await queryInterface.dropTable('Accounts');
   }
 };

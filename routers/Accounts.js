@@ -49,6 +49,7 @@ async function registerAdminHandler(req, res) {
   let user = new db.Accounts({
     username: req.body.username,
     password_hash: hash(req.body.password),
+    is_admin: true,
     date_created: new Date(),
   });
   req.user = user;
@@ -71,6 +72,9 @@ async function registerHandler(req, res) {
 }
 async function getInfoHandler(req, res) {
   let username = req.verifyResult.username;
+  if (username != req.params.username) {
+    return res.status(401).json({ error: `Must be ${req.params.username}` });
+  }
   let user = await db.Accounts.findByPk(username);
   res.status(200).json({
     username,

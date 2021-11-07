@@ -3,7 +3,7 @@ var express = require("express");
 var db = require("../models");
 var crypto = require("crypto");
 var jwt = require("jsonwebtoken");
-var { getAuthToken, authUserMiddleware } = require("../helpers");
+var { getAuthToken } = require("../helpers");
 var EXPIRES_IN = config.EXPIRES_IN || "10m";
 var tokensRouter = express.Router();
 
@@ -45,7 +45,7 @@ async function authenticate(username, password) {
     };
   }
   let payload = {
-    accessToken: signToken({ username }),
+    accessToken: signToken({ username, is_admin: user.is_admin }),
   };
   let loggedInUser = await getLoggedInUser(username);
   if (loggedInUser == null) {
@@ -65,8 +65,7 @@ async function authenticate(username, password) {
   };
 }
 async function loginHandler(req, res) {
-  let username = req.params.username;
-  let password = req.body.password;
+  let { username, password } = req.body;
   let { status, payload } = await authenticate(username, password);
   res.status(status).json(payload);
 }
@@ -95,10 +94,11 @@ async function refreshTokenHandler(req, res) {
 
 // login, create access token: POST /tokens/{username}
 // logout, remove {username, refresh token} from TOKENS table: DELETE /tokens/{username}
-tokensRouter
-  .route("/:username")
-  .post(loginHandler)
-  .delete(authUserMiddleware, logoutHandler)
-  .put(refreshTokenHandler);
+tokensRouter.route("/:username").put(refreshTokenHandler);
 
-module.exports = { router: tokensRouter, name: "tokens" };
+module.exports = {
+  router: tokensRouter,
+  name: "tokens",
+  loginHandler,
+  logoutHandler,
+};

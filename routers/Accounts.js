@@ -57,7 +57,17 @@ async function registerAdminHandler(req, res) {
 }
 
 async function registerHandler(req, res) {
-  let { username, password, is_admin } = req.body;
+  let { username, password, password_confirmation, is_admin } = req.body;
+  if (!username || !password || !password_confirmation) {
+    return res.status(400).json({
+      error: `Either username, password or password_confirmation is missing`,
+    });
+  }
+  if (password != password_confirmation) {
+    return res
+      .status(400)
+      .json({ error: `Password confirmation does not match` });
+  }
   if (is_admin === true) {
     authUserMiddleware(req, res, () => {});
     return await registerAdminHandler(req, res);
@@ -71,10 +81,7 @@ async function registerHandler(req, res) {
   registerCreationHandler(req, res);
 }
 async function getInfoHandler(req, res) {
-  let username = req.verifyResult.username;
-  if (username != req.params.username) {
-    return res.status(401).json({ error: `Must be ${req.params.username}` });
-  }
+  let username = req.params.username;
   let user = await db.Accounts.findByPk(username);
   res.status(200).json({
     username,
@@ -84,7 +91,6 @@ async function getInfoHandler(req, res) {
 }
 
 // register, insert {username, password_hash} to db: POST /accounts
-accountsRouter.route("/").post(registerHandler);
-accountsRouter.route("/:username").get(authUserMiddleware, getInfoHandler);
+accountsRouter.route("/:username").get(getInfoHandler);
 
-module.exports = { router: accountsRouter, name: "accounts" };
+module.exports = { router: accountsRouter, name: "accounts", registerHandler };

@@ -1,3 +1,4 @@
+const cors = require("cors");
 const express = require("express");
 const config = require("./config");
 const app = express();
@@ -7,6 +8,7 @@ var { authUserMiddleware } = require("./helpers");
 var { loginHandler, logoutHandler } = require("./routers/Tokens");
 var { registerHandler } = require("./routers/Accounts");
 
+app.use(cors());
 app.use(express.json());
 console.log(routers);
 routers.forEach((router) => app.use(`/${router.name}`, router.router));

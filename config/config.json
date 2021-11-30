@@ -1,0 +1,27 @@
+{
+  "development": {
+    "username": "xceeded",
+    "password": "bloomingseed",
+    "database": "sos_connect_auth",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "xthricgkjihdjl",
+    "password": "478030566ad18d7ff168c9764d471dd22477c55c3ce269527ba80e672e659025",
+    "database": "d53updcid6fq04",
+    "host": "ec2-18-211-194-36.compute-1.amazonaws.com",
+    "dialect": "postgres",
+    "ssl": true,
+    "dialectOptions": {
+      "ssl": { "require": true, "rejectUnauthorized": false }
+    }
+  }
+}

@@ -6,6 +6,12 @@ const DUP_KEY_ERRCODE = "23505";
 
 var accountsRouter = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *  name: Accounts
+ *  description: Account related APIs
+ */
 function hash(pwd) {
   return crypto.createHash("sha256").update(pwd).digest("base64");
 }
@@ -24,7 +30,7 @@ async function registerCreationHandler(req, res) {
   let user = req.user;
   try {
     await user.save();
-    res.sendStatus(200);
+    res.sendStatus(201);
   } catch (e) {
     e = e.parent;
     if (e.code == DUP_KEY_ERRCODE) {
@@ -56,6 +62,60 @@ async function registerAdminHandler(req, res) {
   return await registerCreationHandler(req, res);
 }
 
+/**
+ * @swagger
+ * /register:
+ *  post:
+ *    summary: Register an account
+ *    tags:
+ *      - Accounts
+ *    security:
+ *      - bearerAuth: []
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              username:
+ *                type: string
+ *                required: true
+ *              password:
+ *                type: string
+ *                required: true
+ *              password_confirmation:
+ *                type: string
+ *                required: true
+ *              is_admin:
+ *                type: boolean
+ *            example:
+ *              username: user123
+ *              password: PKEgIMk123jrcbJ
+ *              password_confirmation: PKEgIMk123jrcbJ
+ *              is_admin: false
+ *    responses:
+ *      201:
+ *        description: Account registered
+ *      400:
+ *        description: Account failed to register. Detail error in response body.
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: "#/components/schemas/Response Error"
+ *      401:
+ *        description: Unauthorized.
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: "#/components/schemas/Response Error"
+ *      500:
+ *        description: Account failed to register due to server error
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: "#/components/schemas/Response Error"
+ */
 async function registerHandler(req, res) {
   let { username, password, password_confirmation, is_admin } = req.body;
   if (!username || !password || !password_confirmation) {
@@ -80,9 +140,59 @@ async function registerHandler(req, res) {
   req.user = user;
   registerCreationHandler(req, res);
 }
+/**
+ * @swagger
+ * /accounts/{username}:
+ *  get:
+ *    summary: Get register info of a specific user, including username, date created, and role
+ *    tags:
+ *      - Accounts
+ *    parameters:
+ *      - name: username
+ *        in: path
+ *        required: true
+ *        description: The username of the user of which to get account info
+ *        schema:
+ *          type: string
+ *          example: bloomingseed
+ *    responses:
+ *      200:
+ *        description: Returns register info
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                username:
+ *                  type: string
+ *                date_created:
+ *                  type: string
+ *                is_admin:
+ *                  type: string
+ *              example:
+ *                username: bloomingseed
+ *                date_created: 2021-12-04T10:26:40.713Z
+ *                is_admin: true
+ *      404:
+ *        description: User not found
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                error:
+ *                  type: string
+ *                  example: "Could not find user with username {username}"
+ */
 async function getInfoHandler(req, res) {
   let username = req.params.username;
   let user = await db.Accounts.findByPk(username);
+  if (!user) {
+    res.status(404).json({
+      error: `Could not find user with username ${username}`,
+    });
+    return;
+  }
   res.status(200).json({
     username,
     date_created: user.date_created,

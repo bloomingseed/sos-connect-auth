@@ -13,12 +13,14 @@ if (!("error" in result)) {
 }
 const env = process.env.NODE_ENV || "development";
 var sequelizeConfig = {};
-try{
+try {
   sequelizeConfig = require("./config.json")[env];
-} catch(e){
+} catch (e) {
   sequelizeConfig = JSON.parse(process.env.sequelizeConfig);
 }
 envs = { ...envs, env, sequelizeConfig };
+
+envs.PORT = envs.PORT || 3000;
 
 console.log("env:", envs);
 

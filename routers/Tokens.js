@@ -4,7 +4,7 @@ var db = require("../models");
 var crypto = require("crypto");
 var jwt = require("jsonwebtoken");
 var { getAuthToken } = require("../helpers");
-var EXPIRES_IN = config.EXPIRES_IN || "10m";
+var EXPIRES_IN = Number.parseInt(config.EXPIRES_IN) || 600;
 var tokensRouter = express.Router();
 
 /**
@@ -40,19 +40,20 @@ async function authenticate(username, password) {
   let user = await db.Accounts.findByPk(username);
   if (!user) {
     return {
-      status: 400,
+      status: 401,
       payload: { error: "Account does not exist or password is incorrect" },
     };
   }
   let passwordHash = hash(password);
   if (passwordHash != user.password_hash) {
     return {
-      status: 400,
+      status: 401,
       payload: { error: "Account does not exist or password is incorrect" },
     };
   }
   let payload = {
     accessToken: signToken({ username, is_admin: user.is_admin }),
+    expiresIn: EXPIRES_IN,
   };
   let loggedInUser = await getLoggedInUser(username);
   if (loggedInUser == null) {
@@ -105,10 +106,13 @@ async function authenticate(username, password) {
  *                  type: string
  *                refreshToken:
  *                  type: string
+ *                expiresIn:
+ *                  type: integer
  *              example:
  *                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJsb29taW5nc2VlZCIsImlzX2FkbWluIjp0cnVlLCJpYXQiOjE2Mzg2MjY5OTgsImV4cCI6MTYzODYyNzg5OH0.P8XWAt2SvwxCJZFlt0S3gVS2taHM7dCPKPN2nDMtxH8
  *                refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJsb29taW5nc2VlZCIsImlhdCI6MTYzNTg4MDk0NH0.y4Gcjp3njdEQGHICWp_iqczLkaDJHy7WftAAQeThppw
- *      400:
+ *                expiresIn: 900
+ *      401:
  *        description: Login failed. Wrong username or password.
  *        content:
  *          application/json:
@@ -138,18 +142,7 @@ async function loginHandler(req, res) {
  *    responses:
  *      200:
  *        description: Logout successfully
- *      400:
- *        description: Can not log out because user not logged in.
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                error:
- *                  type: string
- *              example:
- *                error: User have not logged in
- *      401:
+ *      403:
  *        description: Unauthorized. Logging out need authorization.
  *        content:
  *          application/json:
@@ -162,10 +155,10 @@ async function logoutHandler(req, res) {
   let username = jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET).username;
   let loggedInUser = await getLoggedInUser(username);
   if (loggedInUser == null) {
-    return res.status(400).json({ error: "User have not logged in" });
+    return res.status(403).json({ error: "User have not logged in" });
   }
   await loggedInUser.destroy(); // deletes from db
-  res.sendStatus(200);
+  res.status(200).json(loggedInUser);
 }
 
 /**
@@ -206,8 +199,8 @@ async function logoutHandler(req, res) {
  *                  type: string
  *              example:
  *                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJsb29taW5nc2VlZCIsImlzX2FkbWluIjp0cnVlLCJpYXQiOjE2Mzg2MjY5OTgsImV4cCI6MTYzODYyNzg5OH0.P8XWAt2SvwxCJZFlt0S3gVS2taHM7dCPKPN2nDMtxH8
- *      400:
- *        description: Failed to refresh token.
+ *      403:
+ *        description: Failed to refresh token. User has to log in first.
  *        content:
  *          application/json:
  *            schema:
@@ -224,12 +217,12 @@ async function refreshTokenHandler(req, res) {
   let refreshToken = req.body.refreshToken;
   let loggedInUser = await getLoggedInUser(username, refreshToken);
   if (loggedInUser == null) {
-    return res.status(400).json({
+    return res.status(403).json({
       error: `User ${username} does not exist, has logged out or the refresh token is invalid`,
     });
   }
   let accessToken = signToken({ username });
-  res.status(200).json({ accessToken });
+  res.status(200).json({ accessToken, expiresIn: EXPIRES_IN });
 }
 
 // login, create access token: POST /tokens/{username}

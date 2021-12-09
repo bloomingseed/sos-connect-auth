@@ -8,6 +8,34 @@ var accountsRouter = express.Router();
 
 /**
  * @swagger
+ * components:
+ *  schemas:
+ *    "User Info":
+ *      description: Public user information.
+ *      type: object
+ *      properties:
+ *        username:
+ *          type: string
+ *        date_created:
+ *          type: string
+ *          format: date-time
+ *        is_admin:
+ *          type: boolean
+ *      example:
+ *        username: bloomingseed
+ *        date_created: 2021-11-02T18:39:32.758Z
+ *        is_admin: true
+ */
+function createUserInfo(user) {
+  return {
+    username: user.username,
+    date_created: user.date_created,
+    is_admin: user.is_admin,
+  };
+}
+
+/**
+ * @swagger
  * tags:
  *  name: Accounts
  *  description: Account related APIs
@@ -20,7 +48,7 @@ async function getUser(username, res) {
   let user = await db.Accounts.findByPk(username);
   if (user == null) {
     return res
-      .status(400)
+      .status(401)
       .json({ error: `Username ${username} does not exist` });
   }
   return user;
@@ -30,7 +58,7 @@ async function registerCreationHandler(req, res) {
   let user = req.user;
   try {
     await user.save();
-    res.sendStatus(201);
+    res.status(201).json(createUserInfo(user));
   } catch (e) {
     e = e.parent;
     if (e.code == DUP_KEY_ERRCODE) {
@@ -45,11 +73,11 @@ async function registerAdminHandler(req, res) {
   let username = req.verifyResult.username;
   let sender = await getUser(username);
   if (sender == null) {
-    return res.status(400).json({ error: `Username ${username} not found` });
+    return;
   }
   if (sender.is_admin == false) {
     return res
-      .status(401)
+      .status(403)
       .json({ error: `Only admins can register admin accounts` });
   }
   let user = new db.Accounts({
@@ -97,14 +125,24 @@ async function registerAdminHandler(req, res) {
  *    responses:
  *      201:
  *        description: Account registered
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: "#/components/schemas/User Info"
  *      400:
- *        description: Account failed to register. Detail error in response body.
+ *        description: Register info is invalid. See returned error message for details.
  *        content:
  *          application/json:
  *            schema:
  *              $ref: "#/components/schemas/Response Error"
  *      401:
- *        description: Unauthorized.
+ *        description: Failed to authenticate admin.
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: "#/components/schemas/Response Error"
+ *      403:
+ *        description: Action forbidden. Only admins can register admin accounts
  *        content:
  *          application/json:
  *            schema:
@@ -161,18 +199,7 @@ async function registerHandler(req, res) {
  *        content:
  *          application/json:
  *            schema:
- *              type: object
- *              properties:
- *                username:
- *                  type: string
- *                date_created:
- *                  type: string
- *                is_admin:
- *                  type: string
- *              example:
- *                username: bloomingseed
- *                date_created: 2021-12-04T10:26:40.713Z
- *                is_admin: true
+ *              $ref: "#/components/schemas/User Info"
  *      404:
  *        description: User not found
  *        content:
@@ -193,11 +220,7 @@ async function getInfoHandler(req, res) {
     });
     return;
   }
-  res.status(200).json({
-    username,
-    date_created: user.date_created,
-    is_admin: user.is_admin,
-  });
+  res.status(200).json(createUserInfo(user));
 }
 
 // register, insert {username, password_hash} to db: POST /accounts

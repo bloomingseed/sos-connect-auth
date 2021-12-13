@@ -1,8 +1,6 @@
 const config = require("../index");
 function getServerUrl() {
-  return config.env == "production"
-    ? "https://sos-connect-auth.herokuapp.com"
-    : `http://localhost:${config.PORT}`;
+  return config.HOSTNAME || `http://localhost:${config.PORT}`;
 }
 module.exports = {
   definition: {

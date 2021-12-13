@@ -21,7 +21,7 @@ try {
 }
 envs = { ...envs, env, sequelizeConfig };
 
-envs.PORT = envs.PORT || 3000;
+envs.PORT = envs.APP_PORT || 3000;
 
 console.log("env:", envs);
 

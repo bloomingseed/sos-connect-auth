@@ -1,17 +1,23 @@
 version: "3"
 
 services:
-  db:
-    build: ./database-service
-    restart: always
-    ports:
-      - 3307:3306
+  # db:
+  #   build: ./database-service
+  #   restart: always
+  #   ports:
+  #     - 3307:3306
 
-  app:
-    depends_on:
-      - db
-    build: .
+  nginx:
+    build: ./nginx-service
     ports:
-      - "8000:3000"
-    environment:
-      - DB_HOST=db
+      - 80:80
+      - 443:443
+
+  # app:
+  #   depends_on:
+  #     - db
+  #   build: .
+  #   ports:
+  #     - "8000:3000"
+  #   environment:
+  #     - DB_HOST=db

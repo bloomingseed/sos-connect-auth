@@ -14,7 +14,7 @@ const apiSpec = swaggerJsDoc(require("./config/swagger"));
 
 app.use(cors());
 app.use(express.json());
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(apiSpec));
+app.use("/auth-docs", swaggerUi.serve, swaggerUi.setup(apiSpec));
 console.log(routers);
 routers.forEach((router) => app.use(`/${router.name}`, router.router));
 app.post("/login", loginHandler);

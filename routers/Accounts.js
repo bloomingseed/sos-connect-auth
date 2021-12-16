@@ -2,7 +2,7 @@ var express = require("express");
 var db = require("../models");
 var crypto = require("crypto");
 var { authUserMiddleware } = require("../helpers");
-const DUP_KEY_ERRCODE = "23505";
+const DUP_KEY_ERRNO = "1062";
 
 var accountsRouter = express.Router();
 
@@ -61,7 +61,7 @@ async function registerCreationHandler(req, res) {
     res.status(201).json(createUserInfo(user));
   } catch (e) {
     e = e.parent;
-    if (e.code == DUP_KEY_ERRCODE) {
+    if (e.errno == DUP_KEY_ERRNO) {
       return res
         .status(400)
         .json({ error: `Username ${user.username} has already existed` });
